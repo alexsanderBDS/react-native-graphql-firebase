@@ -5,14 +5,15 @@ import {
   Text,
   Pressable,
   View,
-  TouchableOpacity,
   Dimensions,
 } from "react-native";
 import { Entypo } from "@expo/vector-icons";
 import { TextInput, Button } from "react-native-paper";
 import { db } from "../firebase";
+import ListOfProducts from "./ListOfProducts";
 
 const ProductsModal = ({ uid }) => {
+  const [visible, setVisible] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   const [item, setItem] = useState({
     produto: "",
@@ -45,7 +46,37 @@ const ProductsModal = ({ uid }) => {
         quantidade: item.quantidade,
         valor: item.valor_total,
       })
-      .then(() => {
+      .then(async () => {
+        let more = 1;
+        const len = await db
+          .collection("itens")
+          .doc(uid)
+          .collection("produtos")
+          .get()
+          .then((querySnapshot) => {
+            querySnapshot.forEach((item) => {
+              while (item.data().codigo === querySnapshot.size + 1) {
+                more += querySnapshot.size;
+              }
+            });
+
+            return more;
+          });
+
+        db.collection("itens")
+          .doc(uid)
+          .collection("produtos")
+          .add({
+            codigo: len,
+            descricao: item.produto.toUpperCase(),
+            valor: parseFloat(item.valor_un),
+          })
+          .then(() => {
+            console.log("Item cadastrado!");
+          })
+          .catch(() => {
+            console.log("Item não adicionado!");
+          });
         console.log("Item Adicionado!", uid);
       })
       .catch((err) => {
@@ -72,18 +103,19 @@ const ProductsModal = ({ uid }) => {
             <Text style={styles.textStyle}>Fechar</Text>
           </Pressable>
           <View style={styles.modalView}>
+            <ListOfProducts visible={visible} setVisible={setVisible} />
             <View
-              style={{
-                flex: 1,
-                alignItems: "stretch",
-                justifyContent: "space-around",
-                width: "100%",
-              }}
+              style={{ ...styles.form, display: !visible ? "none" : "flex" }}
             >
               <TextInput
                 style={styles.input}
                 label="Produto"
-                right={<TextInput.Icon name="dots-horizontal" />}
+                right={
+                  <TextInput.Icon
+                    name="dots-horizontal"
+                    onPress={() => setVisible(false)}
+                  />
+                }
                 onChangeText={(val) => setItem({ ...item, produto: val })}
                 value={item.produto}
               />
@@ -182,8 +214,11 @@ const styles = StyleSheet.create({
     fontSize: 21,
     fontWeight: "bold",
   },
-  input: {
-    // marginBottom: 10,
+  form: {
+    flex: 1,
+    alignItems: "stretch",
+    justifyContent: "space-around",
+    width: "100%",
   },
 });
 

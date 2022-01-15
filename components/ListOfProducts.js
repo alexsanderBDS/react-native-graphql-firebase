@@ -1,19 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
-const ListOfProducts = ({ modeProducts, setModeProducts }) => {
+const ListOfProducts = ({ visible, setVisible }) => {
   useEffect(() => {
-    console.log(modeProducts);
-  }, [modeProducts]);
+    console.log(visible);
+  }, [visible]);
 
   return (
-    <View
-      style={[
-        { ...styles.container, display: !modeProducts ? "none" : "flex" },
-      ]}
-    >
-      <Text style={styles.font} onPress={() => setModeProducts(false)}>
+    <View style={[{ ...styles.container, display: visible ? "none" : "flex" }]}>
+      <Text style={styles.font} onPress={() => setVisible(true)}>
         Alex
       </Text>
+      <View>
+        <Text>ID</Text>
+        <Text>Descricao</Text>
+        <Text>Valor</Text>
+      </View>
     </View>
   );
 };
